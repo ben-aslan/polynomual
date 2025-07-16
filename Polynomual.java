@@ -26,7 +26,7 @@ public class Polynomual {
     public Polynomual(String poly) {
         nomuals = new ArrayList<Nomual>();
 
-        poly = poly.toLowerCase().replace("-", "+-");
+        poly = poly.toLowerCase().replace("-", "+-").replace(" ", "");
         var perAdds = poly.split("\\+");
 
         for (var peradd : perAdds) {
@@ -60,19 +60,20 @@ public class Polynomual {
         for (int i = 0; i < this.nomuals.size(); i++) {
             var nom = nomuals.get(i);
 
+            if (i != 0) {
+                sen += nom.getCeoff() > 0 ? "+" : "";
+            }
+
             if (nom.getCeoff() == 0) {
                 continue;
             }
 
-            sen += nom.getCeoff() > 0 ? nom.getCeoff() + "" : "(" + nom.getCeoff() + ")";
+            sen += true ? nom.getCeoff() + "" : "(" + nom.getCeoff() + ")";
 
             sen += nomuals.get(i).getPow() == 0
                     ? "" : "x^" + (nom.getPow() > 0
                     ? nom.getPow() + "" : "(" + nom.getPow() + ")");
-
-            sen += "+";
         }
-        sen = sen.substring(0, sen.length() - 1);
         return sen;
     }
 
@@ -111,88 +112,91 @@ public class Polynomual {
     }
 
     public Polynomual remove(Polynomual right) {
-        var nomuals = new ArrayList<Nomual>();
+        Map<Integer, Double> termMap = new java.util.HashMap<>();
 
-        var rightNomuals = right.getNomuals();
-
-        var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
-
-//        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
-
-        for (var groupedNomual : groupedNomuals.entrySet()) {
-            var ggNomuals = groupedNomual.getValue();
-
-            var resultNomual = new Nomual(groupedNomual.getKey(), 0);
-
-            for (var ggNomual : ggNomuals) {
-                resultNomual.setCeoff(resultNomual.getCeoff() - ggNomual.getCeoff());
-            }
-
-            nomuals.add(resultNomual);
+        for (Nomual term : this.nomuals) {
+            termMap.put(term.getPow(), termMap.getOrDefault(term.getPow(), 0.0) + term.getCeoff());
         }
 
-        return new Polynomual(nomuals);
+        for (Nomual term : right.getNomuals()) {
+            termMap.put(term.getPow(), termMap.getOrDefault(term.getPow(), 0.0) - term.getCeoff());
+        }
+
+        List<Nomual> resultNomuals = termMap.entrySet().stream()
+                .filter(e -> e.getValue() != 0)
+                .map(e -> new Nomual(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        return new Polynomual(resultNomuals);
     }
 
     public Polynomual multiply(Polynomual right) {
-        var nomuals = new ArrayList<Nomual>();
+        List<Nomual> resultNomuals = new ArrayList<>();
 
-        var rightNomuals = right.getNomuals();
-
-        var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
-
-//        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
-
-        for (var groupedNomual : groupedNomuals.entrySet()) {
-            var ggNomuals = groupedNomual.getValue();
-
-            var resultNomual = new Nomual(0, 1);
-
-            for (var ggNomual : ggNomuals) {
-                resultNomual.setCeoff(resultNomual.getCeoff() * ggNomual.getCeoff());
-
-                resultNomual.setPow(resultNomual.getPow() + ggNomual.getPow());
+        for (Nomual leftTerm : this.nomuals) {
+            for (Nomual rightTerm : right.getNomuals()) {
+                int newPow = leftTerm.getPow() + rightTerm.getPow();
+                double newCoeff = leftTerm.getCeoff() * rightTerm.getCeoff();
+                resultNomuals.add(new Nomual(newPow, newCoeff));
             }
-
-            nomuals.add(resultNomual);
         }
 
-        return new Polynomual(nomuals);
+        Map<Integer, Double> combinedTerms = new java.util.HashMap<>();
+        for (Nomual term : resultNomuals) {
+            combinedTerms.put(
+                    term.getPow(),
+                    combinedTerms.getOrDefault(term.getPow(), 0.0) + term.getCeoff()
+            );
+        }
+
+        List<Nomual> finalNomuals = combinedTerms.entrySet().stream()
+                .filter(e -> e.getValue() != 0)
+                .map(e -> new Nomual(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        return new Polynomual(finalNomuals);
     }
 
     public Polynomual devide(Polynomual right) throws ArithmeticException {
-        var nomuals = new ArrayList<Nomual>();
+        List<Nomual> nomuals = this.nomuals;
 
         var rightNomuals = right.getNomuals();
 
-        var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
+        var jNomual = this.nomuals.stream();
+        var rNomual = right.getNomuals();
 
 //        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+//        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+        nomuals.sort((a, b) -> b.getPow() - a.getPow());
+        rNomual.sort((a, b) -> b.getPow() - a.getPow());
 
-        for (var groupedNomual : groupedNomuals.entrySet()) {
-            var ggNomuals = groupedNomual.getValue();
+        List<Nomual> quotientList = new ArrayList<>();
 
-            var resultNomual = new Nomual(0, 1);
+        while (!nomuals.isEmpty() && nomuals.get(0).getPow() >= right.getNomuals().get(0).getPow()) {
+            var leadingDividend = nomuals.get(0);
+            var leadingDivisor = rNomual.get(0);
 
-            for (var ggNomual : ggNomuals) {
-                if (ggNomual.getCeoff() == 0 || resultNomual.getCeoff() == 0) {
-                    throw new ArithmeticException("Division by zero at pow with " + ggNomual.getPow() + " in nomuals.");
-                }
-                resultNomual.setCeoff(resultNomual.getCeoff() / ggNomual.getCeoff());
-
-                if (ggNomuals.indexOf(ggNomual) == 0) {
-                    resultNomual.setPow(ggNomual.getPow());
-                } else {
-                    resultNomual.setPow(resultNomual.getPow() - ggNomual.getPow());
-                }
+            if (leadingDivisor.getCeoff() == 0) {
+                throw new ArithmeticException("Division by zero at pow with  in nomuals.");
             }
 
-            nomuals.add(resultNomual);
+            int newPow = leadingDividend.getPow() - leadingDivisor.getPow();
+            double newCoeff = leadingDividend.getCeoff() / leadingDivisor.getCeoff();
+
+            var term = new Nomual(newPow, newCoeff);
+
+            quotientList.add(term);
+
+            var subtraction = new Polynomual(List.of(term)).multiply(right);
+
+            var updateDivindend = new Polynomual(nomuals).remove(subtraction);
+
+            nomuals = updateDivindend.getNomuals();
+            nomuals.removeIf(n -> n.getCeoff() == 0);
+            nomuals.sort((a, b) -> b.getPow() - a.getPow());
         }
 
-        return new Polynomual(nomuals);
+        return new Polynomual(quotientList);
+
     }
 }
