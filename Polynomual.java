@@ -93,7 +93,7 @@ public class Polynomual {
         var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
 
 //        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Double, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
 
         for (var groupedNomual : groupedNomuals.entrySet()) {
             var ggNomuals = groupedNomual.getValue();
@@ -118,7 +118,7 @@ public class Polynomual {
         var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
 
 //        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Double, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
 
         for (var groupedNomual : groupedNomuals.entrySet()) {
             var ggNomuals = groupedNomual.getValue();
@@ -143,15 +143,17 @@ public class Polynomual {
         var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
 
 //        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Double, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
 
         for (var groupedNomual : groupedNomuals.entrySet()) {
             var ggNomuals = groupedNomual.getValue();
 
-            var resultNomual = new Nomual(groupedNomual.getKey(), 1);
+            var resultNomual = new Nomual(0, 1);
 
             for (var ggNomual : ggNomuals) {
                 resultNomual.setCeoff(resultNomual.getCeoff() * ggNomual.getCeoff());
+
+                resultNomual.setPow(resultNomual.getPow() + ggNomual.getPow());
             }
 
             nomuals.add(resultNomual);
@@ -168,18 +170,24 @@ public class Polynomual {
         var jNomual = Stream.concat(this.nomuals.stream(), rightNomuals.stream());
 
 //        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(Nomual::getCeoff));
-        Map<Double, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
+        Map<Integer, List<Nomual>> groupedNomuals = jNomual.collect(Collectors.groupingBy(n -> n.getPow()));
 
         for (var groupedNomual : groupedNomuals.entrySet()) {
             var ggNomuals = groupedNomual.getValue();
 
-            var resultNomual = new Nomual(groupedNomual.getKey(), 1);
+            var resultNomual = new Nomual(0, 1);
 
             for (var ggNomual : ggNomuals) {
-                if (ggNomual.getCeoff() == 0 || resultNomual.getCeoff()==0) {
+                if (ggNomual.getCeoff() == 0 || resultNomual.getCeoff() == 0) {
                     throw new ArithmeticException("Division by zero at pow with " + ggNomual.getPow() + " in nomuals.");
                 }
                 resultNomual.setCeoff(resultNomual.getCeoff() / ggNomual.getCeoff());
+
+                if (ggNomuals.indexOf(ggNomual) == 0) {
+                    resultNomual.setPow(ggNomual.getPow());
+                } else {
+                    resultNomual.setPow(resultNomual.getPow() - ggNomual.getPow());
+                }
             }
 
             nomuals.add(resultNomual);

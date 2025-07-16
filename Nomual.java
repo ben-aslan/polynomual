@@ -10,19 +10,19 @@ package polynomual;
  */
 public class Nomual {
 
-    double pow;
+    int pow;
     double ceoff;
 
-    public Nomual(double pow, double ceoff) {
+    public Nomual(int pow, double ceoff) {
         this.pow = pow;
         this.ceoff = ceoff;
     }
 
-    public double getPow() {
+    public int getPow() {
         return this.pow;
     }
 
-    public void setPow(double pow) {
+    public void setPow(int pow) {
         this.pow = pow;
     }
 

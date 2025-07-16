@@ -14,7 +14,7 @@ public class main {
 
     public static void main(String[] args) {
         var poly = new Polynomual("5x^3+3x^4-6X^2");
-        var poly2 = new Polynomual("5x^3+3x^4+6X^2");
+        var poly2 = new Polynomual("5x^3+3x^4-6X^2");
 
         System.out.println("Polynomual:");
         System.out.println(poly.toString());
